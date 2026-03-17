@@ -1,8 +1,10 @@
 export type Aggregation = 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
+export type ColumnType = 'string' | 'number' | 'date' | 'boolean';
 
 export interface QueryRequest {
   tableName: string;
   dimension: string;
+  dimensionType: ColumnType;
   measure: string;
   aggregation: Aggregation;
 }
@@ -14,7 +16,7 @@ export interface QueryResult {
 
 export interface TableColumn {
   name: string;
-  type: 'string' | 'number';
+  type: ColumnType;
 }
 
 export interface TableSchema {

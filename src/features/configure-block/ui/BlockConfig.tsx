@@ -1,4 +1,4 @@
-import { Settings2 } from 'lucide-react';
+import { Settings2, Type, Hash, Calendar, ToggleLeft } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
@@ -6,7 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useDatasetStore } from '@/entities/dataset';
 import { useProjectStore } from '@/entities/project';
 import type { Block, ChartType } from '@/entities/block';
-import type { Aggregation } from '@/shared/lib/duckdb';
+import type { Aggregation, ColumnType } from '@/shared/lib/duckdb';
+
+const COLUMN_TYPE_ICON: Record<ColumnType, React.ReactNode> = {
+  string: <Type className="w-3 h-3 shrink-0 text-muted-foreground" />,
+  number: <Hash className="w-3 h-3 shrink-0 text-muted-foreground" />,
+  date: <Calendar className="w-3 h-3 shrink-0 text-muted-foreground" />,
+  boolean: <ToggleLeft className="w-3 h-3 shrink-0 text-muted-foreground" />,
+};
 
 interface Props {
   block: Block;
@@ -31,8 +38,8 @@ export function BlockConfig({ block }: Props) {
   const updateBlock = useProjectStore((s) => s.updateBlock);
 
   const selectedDataset = datasets.find((d) => d.id === block.datasetId);
-  const stringCols = selectedDataset?.columns.filter((c) => c.type === 'string') ?? [];
-  const numberCols = selectedDataset?.columns.filter((c) => c.type === 'number') ?? [];
+  const dimensionCols = selectedDataset?.columns ?? [];
+  const measureCols = selectedDataset?.columns.filter((c) => c.type === 'number' || c.type === 'boolean') ?? [];
 
   return (
     <Popover>
@@ -82,15 +89,18 @@ export function BlockConfig({ block }: Props) {
           <Select
             value={block.dimension ?? ''}
             onValueChange={(v) => updateBlock(block.id, { dimension: v || null })}
-            disabled={stringCols.length === 0}
+            disabled={dimensionCols.length === 0}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select column…" />
             </SelectTrigger>
             <SelectContent>
-              {stringCols.map((c) => (
+              {dimensionCols.map((c) => (
                 <SelectItem key={c.name} value={c.name}>
-                  {c.name}
+                  <span className="flex items-center gap-1.5">
+                    {COLUMN_TYPE_ICON[c.type]}
+                    {c.name}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -102,15 +112,18 @@ export function BlockConfig({ block }: Props) {
           <Select
             value={block.measure ?? ''}
             onValueChange={(v) => updateBlock(block.id, { measure: v || null })}
-            disabled={numberCols.length === 0}
+            disabled={measureCols.length === 0}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select column…" />
             </SelectTrigger>
             <SelectContent>
-              {numberCols.map((c) => (
+              {measureCols.map((c) => (
                 <SelectItem key={c.name} value={c.name}>
-                  {c.name}
+                  <span className="flex items-center gap-1.5">
+                    {COLUMN_TYPE_ICON[c.type]}
+                    {c.name}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

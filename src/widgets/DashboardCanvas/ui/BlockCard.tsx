@@ -23,9 +23,12 @@ function useChartData(block: Block) {
     let cancelled = false;
     setLoading(true);
 
+    const dimCol = dataset.columns.find((c) => c.name === block.dimension);
+
     query({
       tableName: dataset.tableName,
       dimension: block.dimension,
+      dimensionType: dimCol?.type ?? 'string',
       measure: block.measure,
       aggregation: block.aggregation,
     })

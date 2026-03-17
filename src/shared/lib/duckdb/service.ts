@@ -3,7 +3,7 @@ import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
 import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
 import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
-import type { QueryRequest, QueryResult, TableSchema, TableColumn } from './types';
+import type { QueryRequest, QueryResult, TableSchema, TableColumn, ColumnType } from './types';
 
 let db: duckdb.AsyncDuckDB | null = null;
 let conn: duckdb.AsyncDuckDBConnection | null = null;
@@ -30,7 +30,7 @@ export async function init(): Promise<void> {
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
 
   await db.open({
-    path: 'opfs://mybi.db',
+    path: 'opfs://webmcpbi.db',
     accessMode: duckdb.DuckDBAccessMode.READ_WRITE,
   });
 
@@ -45,6 +45,36 @@ function getConn(): duckdb.AsyncDuckDBConnection {
 function getDb(): duckdb.AsyncDuckDB {
   if (!db) throw new Error('DuckDB not initialized. Call init() first.');
   return db;
+}
+
+function mapDuckDBTypeToFrontend(duckdbType: string): ColumnType {
+  const t = duckdbType.toUpperCase().trim();
+
+  if (
+    t.includes('INT') ||
+    t.includes('FLOAT') ||
+    t.includes('DOUBLE') ||
+    t.includes('DECIMAL') ||
+    t.includes('NUMERIC') ||
+    t.includes('REAL') ||
+    t.includes('BIGINT') ||
+    t.includes('SMALLINT') ||
+    t.includes('TINYINT') ||
+    t.includes('HUGEINT') ||
+    t.includes('UBIGINT')
+  ) {
+    return 'number';
+  }
+
+  if (t === 'DATE' || t.includes('TIMESTAMP') || t.includes('TIME') || t === 'INTERVAL') {
+    return 'date';
+  }
+
+  if (t === 'BOOLEAN' || t === 'BOOL') {
+    return 'boolean';
+  }
+
+  return 'string';
 }
 
 export async function importCSV(tableName: string, file: File): Promise<TableSchema> {
@@ -65,12 +95,12 @@ export async function importCSV(tableName: string, file: File): Promise<TableSch
 export async function getSchema(tableName: string): Promise<TableSchema> {
   const c = getConn();
 
-  const descResult = await c.query(`DESCRIBE SELECT * FROM "${tableName}"`);
+  const descResult = await c.query(`SELECT name, type FROM pragma_table_info('${tableName}')`);
   const descRows = descResult.toArray().map((r) => r.toJSON());
 
   const columns: TableColumn[] = descRows.map((row: Record<string, unknown>) => ({
-    name: String(row['column_name']),
-    type: isNumericDuckDBType(String(row['column_type'])) ? ('number' as const) : ('string' as const),
+    name: String(row['name']),
+    type: mapDuckDBTypeToFrontend(String(row['type'])),
   }));
 
   const countResult = await c.query(`SELECT COUNT(*)::INTEGER as cnt FROM "${tableName}"`);
@@ -81,13 +111,16 @@ export async function getSchema(tableName: string): Promise<TableSchema> {
 
 export async function query(req: QueryRequest): Promise<QueryResult> {
   const c = getConn();
-  const { tableName, dimension, measure, aggregation } = req;
+  const { tableName, dimension, dimensionType, measure, aggregation } = req;
+
+  const dimExpr =
+    dimensionType === 'date' ? `STRFTIME(DATE_TRUNC('month', "${dimension}"), '%Y-%m')` : `"${dimension}"`;
 
   const sql = `
-    SELECT "${dimension}" as label, ${aggregation}("${measure}") as value
+    SELECT ${dimExpr} as label, ${aggregation}("${measure}") as value
     FROM "${tableName}"
-    GROUP BY "${dimension}"
-    ORDER BY value DESC
+    GROUP BY ${dimExpr}
+    ORDER BY label ASC
   `;
 
   const result = await c.query(sql);
@@ -102,20 +135,4 @@ export async function query(req: QueryRequest): Promise<QueryResult> {
 export async function dropTable(tableName: string): Promise<void> {
   const c = getConn();
   await c.query(`DROP TABLE IF EXISTS "${tableName}"`);
-}
-
-function isNumericDuckDBType(type: string): boolean {
-  const t = type.toUpperCase();
-  return (
-    t.includes('INT') ||
-    t.includes('FLOAT') ||
-    t.includes('DOUBLE') ||
-    t.includes('DECIMAL') ||
-    t.includes('NUMERIC') ||
-    t.includes('REAL') ||
-    t.includes('BIGINT') ||
-    t.includes('SMALLINT') ||
-    t.includes('TINYINT') ||
-    t.includes('HUGEINT')
-  );
 }
