@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createIdbStorage } from '@/shared/lib/idb-storage';
 import type { Block } from '@/entities/block';
 import type { Project, Dashboard } from './types';
 
@@ -167,7 +166,7 @@ export const useProjectStore = create<ProjectStore>()(
     }),
     {
       name: 'project-store',
-      storage: createJSONStorage(() => createIdbStorage('project-store')),
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );
