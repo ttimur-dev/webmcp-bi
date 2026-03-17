@@ -11,6 +11,8 @@ let conn: duckdb.AsyncDuckDBConnection | null = null;
 export async function init(): Promise<void> {
   if (db) return;
 
+  // await resetPersistentDB('webmcpbi.db');
+
   const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
     mvp: {
       mainModule: duckdb_wasm,
@@ -35,6 +37,8 @@ export async function init(): Promise<void> {
   });
 
   conn = await db.connect();
+
+  await conn.query(`SET checkpoint_threshold = '0KB'`);
 }
 
 function getConn(): duckdb.AsyncDuckDBConnection {
@@ -87,6 +91,7 @@ export async function importCSV(tableName: string, file: File): Promise<TableSch
     `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_csv_auto('${tableName}', header=true, ignore_errors=true)`,
   );
 
+  await c.query('CHECKPOINT;');
   await instance.dropFile(tableName);
 
   return getSchema(tableName);
@@ -114,7 +119,7 @@ export async function query(req: QueryRequest): Promise<QueryResult> {
   const { tableName, dimension, dimensionType, measure, aggregation } = req;
 
   const dimExpr =
-    dimensionType === 'date' ? `STRFTIME(DATE_TRUNC('month', "${dimension}"), '%Y-%m')` : `"${dimension}"`;
+    dimensionType === 'date' ? `STRFTIME(DATE_TRUNC('day', "${dimension}"), '%Y-%m-%d')` : `"${dimension}"`;
 
   const sql = `
     SELECT ${dimExpr} as label, ${aggregation}("${measure}") as value
@@ -135,4 +140,43 @@ export async function query(req: QueryRequest): Promise<QueryResult> {
 export async function dropTable(tableName: string): Promise<void> {
   const c = getConn();
   await c.query(`DROP TABLE IF EXISTS "${tableName}"`);
+  await c.query('CHECKPOINT;');
+}
+
+export async function resetPersistentDB(dbFileName = 'webmcpbi.db'): Promise<void> {
+  if (!('storage' in navigator) || !('getDirectory' in navigator.storage)) {
+    console.warn('OPFS is not supported in this browser — cannot reset the persistent database.');
+    return;
+  }
+
+  const root = await navigator.storage.getDirectory();
+
+  for (const file of [dbFileName, `${dbFileName}.wal`]) {
+    try {
+      await root.removeEntry(file);
+      console.log(`Deleted file: ${file}`);
+    } catch (err: any) {
+      if (err.name === 'NotFoundError') {
+        console.log(`File ${file} not found (already deleted)`);
+      } else {
+        console.error(`Error deleting ${file}:`, err);
+      }
+    }
+  }
+}
+
+export async function getAllTables(): Promise<string[]> {
+  const c = getConn();
+
+  const result = await c.query(`
+    SELECT table_name as name 
+    FROM information_schema.tables 
+    WHERE table_type = 'BASE TABLE' 
+      AND table_schema = 'main'
+    ORDER BY table_name ASC
+  `);
+
+  const rows = result.toArray().map((r) => r.toJSON());
+
+  return rows.map((r: Record<string, unknown>) => String(r['name'] ?? ''));
 }
