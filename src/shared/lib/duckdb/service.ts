@@ -29,6 +29,11 @@ export async function init(): Promise<void> {
   db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
 
+  await db.open({
+    path: 'opfs://mybi.db',
+    accessMode: duckdb.DuckDBAccessMode.READ_WRITE,
+  });
+
   conn = await db.connect();
 }
 
@@ -48,13 +53,11 @@ export async function importCSV(tableName: string, file: File): Promise<TableSch
 
   await instance.registerFileHandle(tableName, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
 
-  await c.insertCSVFromPath(tableName, {
-    schema: 'main',
-    name: tableName,
-    create: true,
-    header: true,
-    detect: true,
-  });
+  await c.query(
+    `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_csv_auto('${tableName}', header=true, ignore_errors=true)`,
+  );
+
+  await instance.dropFile(tableName);
 
   return getSchema(tableName);
 }
