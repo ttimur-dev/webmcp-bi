@@ -3,7 +3,6 @@ import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { useDatasetStore } from '@/entities/dataset';
 import { dropTable } from '@/shared/lib/duckdb';
-import { removeFile } from '@/shared/lib/opfs';
 
 interface Props {
   open: boolean;
@@ -53,7 +52,6 @@ export function DatasetModal({ open, onOpenChange }: Props) {
                   className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
                   onClick={() => {
                     dropTable(dataset.tableName).catch(() => {});
-                    removeFile(`${dataset.tableName}.csv`).catch(() => {});
                     removeDataset(dataset.id);
                   }}
                 >

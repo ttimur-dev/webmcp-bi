@@ -23,9 +23,12 @@ function useChartData(block: Block) {
     let cancelled = false;
     setLoading(true);
 
+    const dimCol = dataset.columns.find((c) => c.name === block.dimension);
+
     query({
       tableName: dataset.tableName,
       dimension: block.dimension,
+      dimensionType: dimCol?.type ?? 'string',
       measure: block.measure,
       aggregation: block.aggregation,
     })
@@ -34,9 +37,12 @@ function useChartData(block: Block) {
 
         const { labels, values } = result;
 
+        const fmt = (v: unknown) =>
+          v == null ? '' : Number(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
         if (block.chartType === 'pie') {
           setOption({
-            tooltip: { trigger: 'item' },
+            tooltip: { trigger: 'item', valueFormatter: fmt },
             series: [
               {
                 type: 'pie',
@@ -47,13 +53,13 @@ function useChartData(block: Block) {
           });
         } else {
           setOption({
-            tooltip: { trigger: 'axis' },
+            tooltip: { trigger: 'axis', valueFormatter: fmt },
             xAxis: {
               type: 'category',
               data: labels,
               axisLabel: { rotate: 30 },
             },
-            yAxis: { type: 'value' },
+            yAxis: { type: 'value', axisLabel: { formatter: fmt } },
             dataZoom: [
               { type: 'inside', xAxisIndex: 0 },
               { type: 'slider', xAxisIndex: 0, height: 20, bottom: 4 },

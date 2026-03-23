@@ -1,2 +1,2 @@
-export { init, importCSV, getSchema, query, dropTable } from './service';
-export type { Aggregation, QueryRequest, QueryResult, TableColumn, TableSchema } from './types';
+export { init, importCSV, getSchema, query, dropTable, getAllTables } from './service';
+export type { Aggregation, ColumnType, QueryRequest, QueryResult, TableColumn, TableSchema } from './types';

@@ -1,6 +1,8 @@
+import type { ColumnType } from '@/shared/lib/duckdb';
+
 export interface DatasetColumn {
   name: string;
-  type: 'string' | 'number';
+  type: ColumnType;
 }
 
 export interface Dataset {

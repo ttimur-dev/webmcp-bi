@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createIdbStorage } from '@/shared/lib/idb-storage';
 import type { Dataset } from './types';
 
 interface DatasetStore {
@@ -18,7 +17,7 @@ export const useDatasetStore = create<DatasetStore>()(
     }),
     {
       name: 'dataset-store',
-      storage: createJSONStorage(() => createIdbStorage('dataset-store')),
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

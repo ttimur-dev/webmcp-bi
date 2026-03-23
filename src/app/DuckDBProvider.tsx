@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { init, importCSV } from '@/shared/lib/duckdb';
+import { init, getAllTables } from '@/shared/lib/duckdb';
 import { useDatasetStore } from '@/entities/dataset';
-import { getFileHandle } from '@/shared/lib/opfs';
 
 interface Props {
   children: ReactNode;
@@ -15,37 +14,31 @@ export function DuckDBProvider({ children }: Props) {
     if (didRun.current) return;
     didRun.current = true;
 
-    async function setup() {
-      await new Promise<void>((resolve) => {
-        if (useDatasetStore.persist.hasHydrated()) {
-          resolve();
-        } else {
-          const unsub = useDatasetStore.persist.onFinishHydration(() => {
-            resolve();
+    init().then(async () => {
+      const { datasets, addDataset } = useDatasetStore.getState();
+
+      // Recovery mechanism: dataset metadata lives in localStorage while actual table data
+      // is persisted in DuckDB (OPFS). If localStorage is cleared, the metadata is lost but
+      // the tables remain. When we detect an empty store, we scan DuckDB for existing tables
+      // and create stub entries so the user can see something went wrong and delete the orphaned
+      // tables if needed. Stubs have empty columns and rowCount=0 intentionally — this signals
+      // that metadata is missing rather than showing silently broken charts.
+      if (datasets.length === 0) {
+        const tables = await getAllTables();
+        for (const tableName of tables) {
+          addDataset({
+            id: tableName,
+            name: tableName,
+            tableName,
+            columns: [],
+            rowCount: 0,
+            createdAt: Date.now(),
           });
-          unsub();
         }
-      });
-
-      await init();
-
-      const datasets = useDatasetStore.getState().datasets;
-      await Promise.all(
-        datasets.map(async (dataset) => {
-          try {
-            const handle = await getFileHandle(`${dataset.tableName}.csv`);
-            const file = await handle.getFile();
-            await importCSV(dataset.tableName, file);
-          } catch {
-            console.warn(`[DuckDBProvider] Could not restore table for "${dataset.name}"`);
-          }
-        }),
-      );
+      }
 
       setReady(true);
-    }
-
-    setup();
+    });
   }, []);
 
   if (!ready) {
