@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { useProjectStore } from '@/entities/project';
 import { ProjectsSidebar } from './ProjectsSidebar';
 import { DashboardsGrid } from './DashboardsGrid';
@@ -60,8 +60,9 @@ export function ProjectsModal({ open, onOpenChange }: Props) {
         {/* Title bar */}
         <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            <FolderOpen className="w-4 h-4" style={{ color: 'oklch(0.53 0.165 52)' }} strokeWidth={2} />
+            <FolderOpen className="w-4 h-4" style={{ color: 'var(--primary)' }} strokeWidth={2} />
             <DialogTitle className="text-sm font-semibold">Projects</DialogTitle>
+            <DialogDescription className="sr-only">Manage projects and dashboards</DialogDescription>
           </div>
           <div className="flex items-center gap-2">
             {activeProjectId && activeDashboardId && (

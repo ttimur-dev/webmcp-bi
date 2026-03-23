@@ -1,4 +1,4 @@
-import type { Block } from '@/entities/block';
+import type { Block } from '@/shared/model';
 
 export interface Dashboard {
   id: string;

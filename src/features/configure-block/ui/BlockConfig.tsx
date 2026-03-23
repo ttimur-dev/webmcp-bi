@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { useDatasetStore } from '@/entities/dataset';
 import { useProjectStore } from '@/entities/project';
-import type { Block, ChartType } from '@/entities/block';
+import type { Block, ChartType } from '@/shared/model';
 import type { Aggregation, ColumnType } from '@/shared/lib/duckdb';
 
 const COLUMN_TYPE_ICON: Record<ColumnType, React.ReactNode> = {

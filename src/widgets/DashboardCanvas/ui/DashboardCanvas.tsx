@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { GridLayout, getCompactor, useContainerWidth } from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
 import { useProjectStore } from '@/entities/project';
 import { BlockCard } from './BlockCard';
 
-// null = no compaction, false = no overlap, true = snap back on collision
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
 const gridCompactor = getCompactor(null, false, true);
 
 interface Props {
@@ -56,12 +56,8 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
         </div>
         <button
           onClick={onOpenProjects}
-          className="mt-1 px-4 py-1.5 rounded-md text-xs font-medium transition-colors border"
-          style={{
-            background: 'oklch(0.53 0.165 52 / 0.08)',
-            color: 'oklch(0.53 0.165 52)',
-            borderColor: 'oklch(0.53 0.165 52 / 0.25)',
-          }}
+          aria-label="Open Projects"
+          className="mt-1 px-4 py-1.5 rounded-md text-xs font-medium transition-colors border bg-[var(--primary-bg)] text-primary border-[var(--primary-border)] hover:bg-[var(--primary-bg-subtle)]"
         >
           Open Projects
         </button>
@@ -106,8 +102,8 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
       <button
         onClick={addBlock}
         title="Add chart"
-        className="absolute bottom-5 right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-        style={{ background: 'oklch(0.53 0.165 52)', color: 'white' }}
+        aria-label="Add new chart block"
+        className="absolute bottom-5 right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 bg-primary text-primary-foreground"
       >
         <Plus className="w-5 h-5" />
       </button>

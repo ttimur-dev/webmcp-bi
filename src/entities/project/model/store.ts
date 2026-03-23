@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Block } from '@/entities/block';
+import type { Block } from '@/shared/model';
 import type { Project, Dashboard } from './types';
 
 interface ProjectStore {

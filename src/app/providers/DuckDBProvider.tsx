@@ -8,6 +8,7 @@ interface Props {
 
 export function DuckDBProvider({ children }: Props) {
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const didRun = useRef(false);
 
   useEffect(() => {
@@ -17,12 +18,6 @@ export function DuckDBProvider({ children }: Props) {
     init().then(async () => {
       const { datasets, addDataset } = useDatasetStore.getState();
 
-      // Recovery mechanism: dataset metadata lives in localStorage while actual table data
-      // is persisted in DuckDB (OPFS). If localStorage is cleared, the metadata is lost but
-      // the tables remain. When we detect an empty store, we scan DuckDB for existing tables
-      // and create stub entries so the user can see something went wrong and delete the orphaned
-      // tables if needed. Stubs have empty columns and rowCount=0 intentionally — this signals
-      // that metadata is missing rather than showing silently broken charts.
       if (datasets.length === 0) {
         const tables = await getAllTables();
         for (const tableName of tables) {
@@ -38,8 +33,19 @@ export function DuckDBProvider({ children }: Props) {
       }
 
       setReady(true);
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : 'Failed to initialize DuckDB');
     });
   }, []);
+
+  if (error) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-2">
+        <p className="text-sm font-medium text-destructive">Failed to start</p>
+        <p className="text-xs text-muted-foreground max-w-sm text-center">{error}</p>
+      </div>
+    );
+  }
 
   if (!ready) {
     return (

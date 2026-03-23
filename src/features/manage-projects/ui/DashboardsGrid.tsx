@@ -91,7 +91,7 @@ export function DashboardsGrid({
                 onDoubleClick={() => onOpen(dashboard.id)}
                 onDelete={() => {
                   if (selectedDashboardId === dashboard.id) onSelect('');
-                  removeDashboard(projectId!, dashboard.id);
+                  removeDashboard(projectId, dashboard.id);
                 }}
               />
             ))}
@@ -101,18 +101,18 @@ export function DashboardsGrid({
               <div
                 className="flex flex-col items-center gap-2 rounded-lg border p-3 w-[110px]"
                 style={{
-                  borderColor: 'oklch(0.53 0.165 52 / 0.35)',
-                  background: 'oklch(0.53 0.165 52 / 0.05)',
+                  borderColor: 'var(--primary-border)',
+                  background: 'var(--primary-bg-subtle)',
                 }}
               >
                 <div
                   className="flex h-14 w-14 items-center justify-center rounded-lg"
                   style={{
-                    background: 'oklch(0.94 0.006 78)',
-                    border: '1px solid oklch(0.53 0.165 52 / 0.25)',
+                    background: 'var(--surface-neutral)',
+                    border: '1px solid var(--primary-border)',
                   }}
                 >
-                  <Plus className="w-5 h-5" style={{ color: 'oklch(0.53 0.165 52 / 0.70)' }} strokeWidth={1.5} />
+                  <Plus className="w-5 h-5" style={{ color: 'var(--primary-muted)' }} strokeWidth={1.5} />
                 </div>
                 <input
                   ref={addInputRef}

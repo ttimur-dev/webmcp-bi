@@ -80,7 +80,7 @@ export function ProjectsSidebar({ projects, selectedProjectId, activeProjectId, 
             <FolderOpen
               className="w-3.5 h-3.5 shrink-0"
               style={{
-                color: activeProjectId === project.id ? 'oklch(0.53 0.165 52)' : 'oklch(0.58 0.010 68)',
+                color: activeProjectId === project.id ? 'var(--primary)' : 'var(--text-subtle)',
               }}
               strokeWidth={1.5}
             />

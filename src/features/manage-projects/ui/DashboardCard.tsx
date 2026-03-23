@@ -27,14 +27,14 @@ export function DashboardCard({ dashboard, isActive, isSelected, onClick, onDoub
       <div
         className="relative flex h-14 w-14 items-center justify-center rounded-lg"
         style={{
-          background: isSelected ? 'oklch(0.53 0.165 52 / 0.10)' : 'oklch(0.94 0.006 78)',
-          border: `1px solid ${isSelected ? 'oklch(0.53 0.165 52 / 0.30)' : 'oklch(0.87 0.008 78)'}`,
+          background: isSelected ? 'var(--primary-bg)' : 'var(--surface-neutral)',
+          border: `1px solid ${isSelected ? 'var(--primary-border)' : 'var(--border)'}`,
         }}
       >
         <LayoutDashboard
           className="w-6 h-6"
           style={{
-            color: isSelected ? 'oklch(0.53 0.165 52)' : 'oklch(0.58 0.010 68)',
+            color: isSelected ? 'var(--primary)' : 'var(--text-subtle)',
           }}
           strokeWidth={1.5}
         />
@@ -42,8 +42,8 @@ export function DashboardCard({ dashboard, isActive, isSelected, onClick, onDoub
           <div
             className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
             style={{
-              background: 'oklch(0.53 0.165 52)',
-              boxShadow: '0 0 5px oklch(0.53 0.165 52 / 0.5)',
+              background: 'var(--primary)',
+              boxShadow: '0 0 5px var(--primary-glow)',
             }}
           />
         )}
@@ -53,7 +53,7 @@ export function DashboardCard({ dashboard, isActive, isSelected, onClick, onDoub
       <span
         className="w-full truncate text-center text-[11px] font-medium leading-tight"
         style={{
-          color: isSelected ? 'oklch(0.22 0.012 55)' : 'oklch(0.40 0.008 62)',
+          color: isSelected ? 'var(--secondary-foreground)' : 'var(--text-dimmed)',
         }}
       >
         {dashboard.name}

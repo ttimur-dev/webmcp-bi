@@ -4,7 +4,7 @@ import type { EChartsOption } from 'echarts';
 import { Button } from '@/shared/ui/button';
 import { EChart } from '@/shared/ui/EChart';
 import { useDatasetStore } from '@/entities/dataset';
-import type { Block } from '@/entities/block';
+import type { Block } from '@/shared/model';
 import { useProjectStore } from '@/entities/project';
 import { BlockConfig } from '@/features/configure-block';
 import { query } from '@/shared/lib/duckdb';
@@ -107,7 +107,7 @@ export function BlockCard({ block }: Props) {
       {/* Drag handle / header */}
       <div
         className={`drag-handle flex h-8 shrink-0 items-center gap-1 border-b border-border px-2 ${block.static ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}`}
-        style={{ background: 'oklch(0.96 0.005 78)' }}
+        style={{ background: 'var(--sidebar)' }}
       >
         <GripHorizontal className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-40" strokeWidth={1.5} />
         <span className="min-w-0 flex-1 truncate text-xs font-mono font-medium select-none text-foreground/60">
@@ -118,7 +118,7 @@ export function BlockCard({ block }: Props) {
           size="icon-sm"
           className="text-muted-foreground"
           style={{
-            color: block.static ? 'oklch(0.53 0.165 52)' : undefined,
+            color: block.static ? 'var(--primary)' : undefined,
           }}
           onClick={(e) => {
             e.stopPropagation();
