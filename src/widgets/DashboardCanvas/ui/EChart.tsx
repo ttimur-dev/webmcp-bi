@@ -1,7 +1,6 @@
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import { useEffect, useRef } from 'react';
-import { buildChartTheme } from '../lib/buildChartTheme';
 
 interface Props {
   option: EChartsOption;
@@ -16,7 +15,7 @@ export function EChart({ option, className }: Props) {
     const el = containerRef.current;
     if (!el) return;
 
-    const chart = echarts.init(el, buildChartTheme());
+    const chart = echarts.init(el);
     chartRef.current = chart;
 
     const ro = new ResizeObserver(() => chart.resize());
