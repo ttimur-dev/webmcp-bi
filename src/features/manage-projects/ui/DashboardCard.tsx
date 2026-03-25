@@ -18,49 +18,36 @@ export function DashboardCard({ dashboard, isActive, isSelected, onClick, onDoub
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group relative flex flex-col items-center gap-2 rounded-lg border p-3 text-left transition-all cursor-pointer',
-        'w-[110px]',
+        'group relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border p-3 text-left transition-all',
+        'w-27.5',
         isSelected ? 'border-primary/40 bg-primary/6' : 'border-border hover:border-border/60 hover:bg-accent',
       )}
     >
       {/* Icon */}
       <div
-        className="relative flex h-14 w-14 items-center justify-center rounded-lg"
-        style={{
-          background: isSelected ? 'var(--primary-bg)' : 'var(--surface-neutral)',
-          border: `1px solid ${isSelected ? 'var(--primary-border)' : 'var(--border)'}`,
-        }}
+        className={cn(
+          'relative flex h-14 w-14 items-center justify-center rounded-lg border',
+          isSelected ? 'border-primary-border bg-primary-bg' : 'border-border bg-surface-neutral',
+        )}
       >
-        <LayoutDashboard
-          className="w-6 h-6"
-          style={{
-            color: isSelected ? 'var(--primary)' : 'var(--text-subtle)',
-          }}
-          strokeWidth={1.5}
-        />
+        <LayoutDashboard className={cn('size-6', isSelected ? 'text-primary' : 'text-text-subtle')} strokeWidth={1.5} />
         {isActive && (
-          <div
-            className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
-            style={{
-              background: 'var(--primary)',
-              boxShadow: '0 0 5px var(--primary-glow)',
-            }}
-          />
+          <div className="absolute -top-1 -right-1 size-2.5 rounded-full bg-primary shadow-glow-primary-sm" />
         )}
       </div>
 
       {/* Name */}
       <span
-        className="w-full truncate text-center text-[11px] font-medium leading-tight"
-        style={{
-          color: isSelected ? 'var(--secondary-foreground)' : 'var(--text-dimmed)',
-        }}
+        className={cn(
+          'w-full truncate text-center text-label leading-tight font-medium',
+          isSelected ? 'text-secondary-foreground' : 'text-text-dimmed',
+        )}
       >
         {dashboard.name}
       </span>
 
       {/* Block count */}
-      <span className="text-[10px] font-mono text-muted-foreground opacity-70">
+      <span className="font-mono text-2xs text-muted-foreground opacity-70">
         {dashboard.blocks.length} block{dashboard.blocks.length !== 1 ? 's' : ''}
       </span>
 
@@ -68,13 +55,13 @@ export function DashboardCard({ dashboard, isActive, isSelected, onClick, onDoub
       <Button
         variant="ghost"
         size="icon-sm"
-        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity h-5 w-5"
+        className="absolute top-1 right-1 size-5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
       >
-        <Trash2 className="w-3 h-3" />
+        <Trash2 className="size-3" />
       </Button>
     </div>
   );

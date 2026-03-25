@@ -1,16 +1,15 @@
-import { useState } from 'react';
 import { Database, FolderOpen, BarChart2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/shared/ui/button';
-import { DataManagementModal } from '@/features/data-management';
 import { useDatasetStore } from '@/entities/dataset';
 import { useProjectStore } from '@/entities/project';
 
 interface Props {
   onOpenProjects: () => void;
+  onOpenData: () => void;
 }
 
-export function Header({ onOpenProjects }: Props) {
+export function Header({ onOpenProjects, onOpenData }: Props) {
   const datasets = useDatasetStore((s) => s.datasets);
 
   const { activeProjectName, activeDashboardName, activeBlockCount } = useProjectStore(
@@ -25,48 +24,38 @@ export function Header({ onOpenProjects }: Props) {
     }),
   );
 
-  const [dataManagementOpen, setDataManagementOpen] = useState(false);
-
   return (
-    <header className="app-header flex h-11 shrink-0 items-center gap-1 px-3">
+    <header className="flex h-11 shrink-0 items-center gap-1 border-b border-border bg-surface-header px-3 backdrop-blur">
       {/* Brand */}
-      <div className="flex items-center gap-2 pr-3 mr-1 border-r border-border">
-        <BarChart2 className="w-4 h-4" style={{ color: 'var(--primary)' }} strokeWidth={2.5} />
-        <span className="text-sm font-bold select-none text-foreground" style={{ letterSpacing: '0.04em' }}>
-          WebMCP BI
-        </span>
+      <div className="mr-1 flex items-center gap-2 border-r border-border pr-3">
+        <BarChart2 className="size-4 text-primary" strokeWidth={2.5} />
+        <span className="text-sm font-bold tracking-[0.04em] text-foreground select-none">WebMCP BI</span>
       </div>
 
       {/* Projects */}
       <Button
         variant="ghost"
         size="sm"
-        className="text-xs font-medium text-muted-foreground hover:text-foreground gap-1.5"
+        className="gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
         onClick={onOpenProjects}
       >
-        <FolderOpen className="w-3.5 h-3.5" />
+        <FolderOpen className="size-3.5" />
         Projects
       </Button>
 
-      <div className="w-px h-4 bg-border mx-1" />
+      <div className="mx-1 h-4 w-px bg-border" />
 
       {/* Data Management */}
       <Button
         variant="ghost"
         size="sm"
-        className="text-xs font-medium text-muted-foreground hover:text-foreground gap-1.5"
-        onClick={() => setDataManagementOpen(true)}
+        className="gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+        onClick={onOpenData}
       >
-        <Database className="w-3.5 h-3.5" />
+        <Database className="size-3.5" />
         Data
         {datasets.length > 0 && (
-          <span
-            className="ml-0.5 rounded px-1.5 py-0.5 text-xs font-mono font-semibold"
-            style={{
-              background: 'var(--primary-bg)',
-              color: 'var(--primary)',
-            }}
-          >
+          <span className="ml-0.5 rounded bg-primary-bg px-1.5 py-0.5 font-mono text-xs font-semibold text-primary">
             {datasets.length}
           </span>
         )}
@@ -77,31 +66,28 @@ export function Header({ onOpenProjects }: Props) {
 
       {/* Active dashboard */}
       <div className="flex items-center gap-1.5">
-        <div className="brand-dot" />
+        <div className="size-1.75 shrink-0 rounded-full bg-primary shadow-glow-primary" />
         {activeDashboardName ? (
           <button
-            className="text-xs font-mono hover:text-foreground transition-colors"
-            style={{ color: 'var(--muted-foreground)' }}
+            className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
             onClick={onOpenProjects}
           >
-            <span style={{ color: 'var(--text-subtle)' }}>{activeProjectName}</span>
-            <span className="opacity-40 mx-0.5">/</span>
-            <span style={{ color: 'var(--primary)' }}>{activeDashboardName}</span>
-            <span className="opacity-40 ml-1.5">
+            <span className="text-text-subtle">{activeProjectName}</span>
+            <span className="mx-0.5 opacity-40">/</span>
+            <span className="text-primary">{activeDashboardName}</span>
+            <span className="ml-1.5 opacity-40">
               · {activeBlockCount} block{activeBlockCount !== 1 ? 's' : ''}
             </span>
           </button>
         ) : (
           <button
-            className="text-xs font-mono text-muted-foreground opacity-60 hover:opacity-90 transition-opacity"
+            className="font-mono text-xs text-muted-foreground opacity-60 transition-opacity hover:opacity-90"
             onClick={onOpenProjects}
           >
             no dashboard
           </button>
         )}
       </div>
-
-      <DataManagementModal open={dataManagementOpen} onOpenChange={setDataManagementOpen} />
     </header>
   );
 }

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/shared/ui/button';
 import { useProjectStore, type Dashboard } from '@/entities/project';
 import { DashboardCard } from './DashboardCard';
@@ -21,66 +22,58 @@ export function DashboardsGrid({
   onSelect,
   onOpen,
 }: Props) {
-  const addDashboard = useProjectStore((s) => s.addDashboard);
-  const removeDashboard = useProjectStore((s) => s.removeDashboard);
+  const { addDashboard, removeDashboard } = useProjectStore(
+    useShallow((s) => ({ addDashboard: s.addDashboard, removeDashboard: s.removeDashboard })),
+  );
 
-  const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [addingName, setAddingName] = useState<string | null>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddConfirm = () => {
-    const name = newName.trim();
-    if (name && projectId) {
-      const id = addDashboard(projectId, name);
-      onSelect(id);
-    }
-    setAdding(false);
-    setNewName('');
+  const startAdd = () => {
+    setAddingName('');
+    setTimeout(() => addInputRef.current?.focus(), 0);
+  };
+
+  const confirmAdd = () => {
+    if (addingName?.trim() && projectId) onSelect(addDashboard(projectId, addingName.trim()));
+    setAddingName(null);
   };
 
   if (!projectId) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-xs font-mono text-muted-foreground opacity-60">Select a project to see dashboards</p>
+        <p className="font-mono text-xs text-muted-foreground opacity-60">Select a project to see dashboards</p>
       </div>
     );
   }
 
   return (
     <div className="flex h-full flex-col">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Dashboards</span>
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <span className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Dashboards</span>
         <Button
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setAdding(true);
-            setTimeout(() => addInputRef.current?.focus(), 0);
-          }}
+          onClick={startAdd}
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="size-3.5" />
         </Button>
       </div>
 
-      {/* Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        {dashboards.length === 0 && !adding ? (
+        {dashboards.length === 0 && addingName === null ? (
           <div className="flex h-full flex-col items-center justify-center gap-2">
-            <p className="text-xs font-mono text-muted-foreground opacity-60">no dashboards yet</p>
+            <p className="font-mono text-xs text-muted-foreground opacity-60">no dashboards yet</p>
             <button
-              onClick={() => {
-                setAdding(true);
-                setTimeout(() => addInputRef.current?.focus(), 0);
-              }}
-              className="text-xs font-mono text-primary hover:text-primary/70 transition-colors"
+              onClick={startAdd}
+              className="font-mono text-xs text-primary transition-colors hover:text-primary/70"
             >
               + create one
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-3 content-start">
+          <div className="flex flex-wrap content-start gap-3">
             {dashboards.map((dashboard) => (
               <DashboardCard
                 key={dashboard.id}
@@ -96,38 +89,22 @@ export function DashboardsGrid({
               />
             ))}
 
-            {/* Inline add card */}
-            {adding && (
-              <div
-                className="flex flex-col items-center gap-2 rounded-lg border p-3 w-[110px]"
-                style={{
-                  borderColor: 'var(--primary-border)',
-                  background: 'var(--primary-bg-subtle)',
-                }}
-              >
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-lg"
-                  style={{
-                    background: 'var(--surface-neutral)',
-                    border: '1px solid var(--primary-border)',
-                  }}
-                >
-                  <Plus className="w-5 h-5" style={{ color: 'var(--primary-muted)' }} strokeWidth={1.5} />
+            {addingName !== null && (
+              <div className="flex w-27.5 flex-col items-center gap-2 rounded-lg border border-primary-border bg-primary-bg-subtle p-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-primary-border bg-surface-neutral">
+                  <Plus className="size-5 text-primary-muted" strokeWidth={1.5} />
                 </div>
                 <input
                   ref={addInputRef}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onBlur={handleAddConfirm}
+                  value={addingName}
+                  onChange={(e) => setAddingName(e.target.value)}
+                  onBlur={confirmAdd}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddConfirm();
-                    if (e.key === 'Escape') {
-                      setAdding(false);
-                      setNewName('');
-                    }
+                    if (e.key === 'Enter') confirmAdd();
+                    if (e.key === 'Escape') setAddingName(null);
                   }}
                   placeholder="name…"
-                  className="w-full bg-transparent text-xs text-center text-foreground outline-none border-b border-primary/40 placeholder:text-muted-foreground/50"
+                  className="w-full border-b border-primary/40 bg-transparent text-center text-xs text-foreground outline-none placeholder:text-muted-foreground/50"
                 />
               </div>
             )}

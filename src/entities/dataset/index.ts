@@ -1,2 +1,2 @@
-export type { Dataset, DatasetColumn } from './model/types';
-export { useDatasetStore } from './model/store';
+export type { Dataset, DatasetColumn } from './types/types';
+export { useDatasetStore } from './model/useDatasetStore';

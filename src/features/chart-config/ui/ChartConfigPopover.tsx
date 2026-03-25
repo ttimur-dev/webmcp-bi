@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Settings2, Type, Hash, Calendar, ToggleLeft } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
@@ -5,41 +6,33 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { useDatasetStore } from '@/entities/dataset';
 import { useProjectStore } from '@/entities/project';
-import type { Block, ChartType } from '@/shared/model';
+import type { ChartBlock, ChartType } from '@/shared/types';
 import type { Aggregation, ColumnType } from '@/shared/lib/duckdb';
+import { CHART_TYPES, AGGREGATIONS } from '../constants/constants';
 
 const COLUMN_TYPE_ICON: Record<ColumnType, React.ReactNode> = {
-  string: <Type className="w-3 h-3 shrink-0 text-muted-foreground" />,
-  number: <Hash className="w-3 h-3 shrink-0 text-muted-foreground" />,
-  date: <Calendar className="w-3 h-3 shrink-0 text-muted-foreground" />,
-  boolean: <ToggleLeft className="w-3 h-3 shrink-0 text-muted-foreground" />,
+  string: <Type className="size-3 shrink-0 text-muted-foreground" />,
+  number: <Hash className="size-3 shrink-0 text-muted-foreground" />,
+  date: <Calendar className="size-3 shrink-0 text-muted-foreground" />,
+  boolean: <ToggleLeft className="size-3 shrink-0 text-muted-foreground" />,
 };
 
 interface Props {
-  block: Block;
+  block: ChartBlock;
 }
 
-const CHART_TYPES: { value: ChartType; label: string }[] = [
-  { value: 'bar', label: 'Bar' },
-  { value: 'line', label: 'Line' },
-  { value: 'pie', label: 'Pie' },
-];
-
-const AGGREGATIONS: { value: Aggregation; label: string }[] = [
-  { value: 'SUM', label: 'Sum' },
-  { value: 'COUNT', label: 'Count' },
-  { value: 'AVG', label: 'Average' },
-  { value: 'MIN', label: 'Min' },
-  { value: 'MAX', label: 'Max' },
-];
-
-export function BlockConfig({ block }: Props) {
+export function ChartConfigPopover({ block }: Props) {
   const datasets = useDatasetStore((s) => s.datasets);
-  const updateBlock = useProjectStore((s) => s.updateBlock);
+  const updateChartBlock = useProjectStore((s) => s.updateChartBlock);
 
-  const selectedDataset = datasets.find((d) => d.id === block.datasetId);
-  const dimensionCols = selectedDataset?.columns ?? [];
-  const measureCols = selectedDataset?.columns.filter((c) => c.type === 'number' || c.type === 'boolean') ?? [];
+  const dimensionCols = useMemo(
+    () => datasets.find((d) => d.id === block.datasetId)?.columns ?? [],
+    [datasets, block.datasetId],
+  );
+  const measureCols = useMemo(
+    () => dimensionCols.filter((c) => c.type === 'number' || c.type === 'boolean'),
+    [dimensionCols],
+  );
 
   return (
     <Popover>
@@ -53,7 +46,7 @@ export function BlockConfig({ block }: Props) {
           <Label>Dataset</Label>
           <Select
             value={block.datasetId ?? ''}
-            onValueChange={(v) => updateBlock(block.id, { datasetId: v || null, dimension: null, measure: null })}
+            onValueChange={(v) => updateChartBlock(block.id, { datasetId: v || null, dimension: null, measure: null })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select dataset…" />
@@ -70,7 +63,10 @@ export function BlockConfig({ block }: Props) {
 
         <div className="space-y-1">
           <Label>Chart type</Label>
-          <Select value={block.chartType} onValueChange={(v) => updateBlock(block.id, { chartType: v as ChartType })}>
+          <Select
+            value={block.chartType}
+            onValueChange={(v) => updateChartBlock(block.id, { chartType: v as ChartType })}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -88,7 +84,7 @@ export function BlockConfig({ block }: Props) {
           <Label>Dimension (X)</Label>
           <Select
             value={block.dimension ?? ''}
-            onValueChange={(v) => updateBlock(block.id, { dimension: v || null })}
+            onValueChange={(v) => updateChartBlock(block.id, { dimension: v || null })}
             disabled={dimensionCols.length === 0}
           >
             <SelectTrigger>
@@ -111,7 +107,7 @@ export function BlockConfig({ block }: Props) {
           <Label>Measure (Y)</Label>
           <Select
             value={block.measure ?? ''}
-            onValueChange={(v) => updateBlock(block.id, { measure: v || null })}
+            onValueChange={(v) => updateChartBlock(block.id, { measure: v || null })}
             disabled={measureCols.length === 0}
           >
             <SelectTrigger>
@@ -134,7 +130,7 @@ export function BlockConfig({ block }: Props) {
           <Label>Aggregation</Label>
           <Select
             value={block.aggregation}
-            onValueChange={(v) => updateBlock(block.id, { aggregation: v as Aggregation })}
+            onValueChange={(v) => updateChartBlock(block.id, { aggregation: v as Aggregation })}
           >
             <SelectTrigger>
               <SelectValue />

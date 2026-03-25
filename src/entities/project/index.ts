@@ -1,2 +1,2 @@
-export type { Project, Dashboard } from './model/types';
-export { useProjectStore } from './model/store';
+export type { Project, Dashboard } from './types/types';
+export { useProjectStore } from './model/useProjectStore';

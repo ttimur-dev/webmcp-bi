@@ -1,22 +1,22 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { CloudUpload, Database, Sheet, X } from 'lucide-react';
+import { CloudUpload, Database } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { useDatasetStore } from '@/entities/dataset';
-import { dropTable, importCSV } from '@/shared/lib/duckdb';
-import type { Dataset } from '@/entities/dataset';
+import { DatasetRow } from './DatasetRow';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DataManagementModal({ open, onOpenChange }: Props) {
+export function DatasetManagerModal({ open, onOpenChange }: Props) {
   const datasets = useDatasetStore((s) => s.datasets);
-  const addDataset = useDatasetStore((s) => s.addDataset);
-  const removeDataset = useDatasetStore((s) => s.removeDataset);
+  const importDataset = useDatasetStore((s) => s.importDataset);
+  const deleteDataset = useDatasetStore((s) => s.deleteDataset);
 
   const [tab, setTab] = useState('datasets');
   const [title, setTitle] = useState('');
@@ -58,18 +58,7 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
     setSubmitting(true);
     try {
       const name = title.trim() || file.name.replace(/\.csv$/i, '');
-      const id = crypto.randomUUID();
-      const tableName = `ds_${id.replaceAll('-', '')}`;
-      const schema = await importCSV(tableName, file);
-      const dataset: Dataset = {
-        id,
-        name,
-        tableName,
-        columns: schema.columns,
-        rowCount: schema.rowCount,
-        createdAt: Date.now(),
-      };
-      addDataset(dataset);
+      await importDataset(file, name);
       resetUpload();
       setTab('datasets');
     } catch (error) {
@@ -94,14 +83,10 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="flex flex-col p-0 gap-0 overflow-hidden"
-        style={{ width: '540px', maxWidth: '95vw' }}
-        showCloseButton={false}
-      >
-        <DialogHeader className="flex flex-row items-center px-4 py-3 border-b border-border shrink-0">
+      <DialogContent className="flex w-135 max-w-[95vw] flex-col gap-0 overflow-hidden p-0" showCloseButton={false}>
+        <DialogHeader className="flex shrink-0 flex-row items-center border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <Database className="w-4 h-4" style={{ color: 'var(--primary)' }} strokeWidth={2} />
+            <Database className="size-4 text-primary" strokeWidth={2} />
             <DialogTitle className="text-sm font-semibold">Data Management</DialogTitle>
             <DialogDescription className="sr-only">Upload and manage datasets</DialogDescription>
           </div>
@@ -114,10 +99,10 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
           </TabsList>
 
           <TabsContent value="datasets" className="mt-0">
-            <div className="px-5 py-4 flex flex-col gap-2 min-h-[220px] max-h-[60vh] overflow-y-auto">
+            <div className="flex max-h-[60vh] min-h-55 flex-col gap-2 overflow-y-auto px-5 py-4">
               {datasets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center flex-1 py-14 gap-1.5">
-                  <p className="text-xs font-mono text-muted-foreground">no datasets loaded</p>
+                <div className="flex flex-1 flex-col items-center justify-center gap-1.5 py-14">
+                  <p className="font-mono text-xs text-muted-foreground">no datasets loaded</p>
                   <p className="text-xs text-muted-foreground opacity-60">
                     Switch to{' '}
                     <button
@@ -131,27 +116,20 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
                 </div>
               ) : (
                 datasets.map((dataset) => (
-                  <DatasetRow
-                    key={dataset.id}
-                    dataset={dataset}
-                    onDelete={() => {
-                      dropTable(dataset.tableName).catch(console.error);
-                      removeDataset(dataset.id);
-                    }}
-                  />
+                  <DatasetRow key={dataset.id} dataset={dataset} onDelete={() => deleteDataset(dataset.id)} />
                 ))
               )}
             </div>
           </TabsContent>
 
           <TabsContent value="upload" className="mt-0">
-            <div className="px-5 py-5 flex flex-col gap-3">
+            <div className="flex flex-col gap-3 px-5 py-5">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Dataset name"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-amber-400 transition-colors placeholder:text-muted-foreground"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus:border-primary"
               />
 
               <div
@@ -159,23 +137,17 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className="relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-12"
-                style={{
-                  borderColor: dragging
-                    ? 'var(--accent-upload)'
+                className={cn(
+                  'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 transition-colors',
+                  dragging
+                    ? 'border-accent-upload bg-accent-upload-bg'
                     : file
-                      ? 'var(--accent-upload-border)'
-                      : 'var(--border-light)',
-                  background: dragging
-                    ? 'var(--accent-upload-bg)'
-                    : file
-                      ? 'var(--accent-upload-bg-subtle)'
-                      : 'transparent',
-                }}
+                      ? 'border-accent-upload-border bg-accent-upload-bg-subtle'
+                      : 'border-border-light bg-transparent',
+                )}
               >
                 <CloudUpload
-                  className="w-10 h-10"
-                  style={{ color: file ? 'var(--accent-upload)' : 'var(--icon-placeholder)' }}
+                  className={cn('size-10', file ? 'text-accent-upload' : 'text-icon-placeholder')}
                   strokeWidth={1.5}
                 />
                 {file ? (
@@ -189,7 +161,7 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="mx-0 mb-0 px-4 py-3 shrink-0 flex-row justify-end">
+        <DialogFooter className="mx-0 mb-0 shrink-0 flex-row justify-end px-4 py-3">
           {tab === 'datasets' ? (
             <Button variant="ghost" onClick={handleClose}>
               Close
@@ -213,40 +185,5 @@ export function DataManagementModal({ open, onOpenChange }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function DatasetRow({ dataset, onDelete }: { dataset: Dataset; onDelete: () => void }) {
-  const date = new Date(dataset.createdAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
-  return (
-    <div className="group flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:bg-muted/30">
-      <div
-        className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
-        style={{ background: 'var(--primary-bg)' }}
-      >
-        <Sheet className="w-4 h-4" style={{ color: 'var(--primary)' }} />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold leading-tight truncate text-foreground">{dataset.name}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {dataset.rowCount.toLocaleString()} rows · {dataset.columns.length} cols · {date}
-        </p>
-      </div>
-
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-        onClick={onDelete}
-      >
-        <X className="w-4 h-4" />
-      </Button>
-    </div>
   );
 }

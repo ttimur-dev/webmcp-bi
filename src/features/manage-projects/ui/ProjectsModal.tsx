@@ -53,20 +53,19 @@ export function ProjectsModal({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex flex-col p-0 gap-0 overflow-hidden"
-        style={{ width: '760px', height: '480px', maxWidth: '95vw' }}
+        className="flex h-120 w-190 max-w-[95vw] flex-col gap-0 overflow-hidden p-0"
         showCloseButton={false}
       >
         {/* Title bar */}
-        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <DialogHeader className="flex shrink-0 flex-row items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <FolderOpen className="w-4 h-4" style={{ color: 'var(--primary)' }} strokeWidth={2} />
+            <FolderOpen className="size-4 text-primary" strokeWidth={2} />
             <DialogTitle className="text-sm font-semibold">Projects</DialogTitle>
             <DialogDescription className="sr-only">Manage projects and dashboards</DialogDescription>
           </div>
           <div className="flex items-center gap-2">
             {activeProjectId && activeDashboardId && (
-              <span className="text-xs font-mono text-muted-foreground opacity-70">
+              <span className="font-mono text-xs text-muted-foreground opacity-70">
                 {projects.find((p) => p.id === activeProjectId)?.name}
                 {' / '}
                 {
@@ -79,7 +78,7 @@ export function ProjectsModal({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         {/* Two-pane body */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           {/* Left: project sidebar */}
           <div className="w-48 shrink-0 border-r border-border">
             <ProjectsSidebar
@@ -91,7 +90,7 @@ export function ProjectsModal({ open, onOpenChange }: Props) {
           </div>
 
           {/* Right: dashboards grid */}
-          <div className="flex-1 min-w-0 bg-card">
+          <div className="min-w-0 flex-1 bg-card">
             <DashboardsGrid
               projectId={selProjectId}
               dashboards={selectedProject?.dashboards ?? []}
@@ -103,7 +102,7 @@ export function ProjectsModal({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        <DialogFooter className="mx-0 mb-0 px-4 py-3 shrink-0 flex-row justify-end">
+        <DialogFooter className="mx-0 mb-0 shrink-0 flex-row justify-end px-4 py-3">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

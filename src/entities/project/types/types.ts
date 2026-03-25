@@ -1,9 +1,9 @@
-import type { Block } from '@/shared/model';
+import type { ChartBlock } from '@/shared/types';
 
 export interface Dashboard {
   id: string;
   name: string;
-  blocks: Block[];
+  blocks: ChartBlock[];
   createdAt: number;
 }
 

@@ -1,10 +1,7 @@
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import { useEffect, useRef } from 'react';
-import { PAPER_STUDIO_THEME_NAME, registerPaperStudioTheme } from '@/shared/lib/echarts/theme';
-
-// Register theme once
-registerPaperStudioTheme();
+import { buildChartTheme } from '../lib/buildChartTheme';
 
 interface Props {
   option: EChartsOption;
@@ -19,7 +16,7 @@ export function EChart({ option, className }: Props) {
     const el = containerRef.current;
     if (!el) return;
 
-    const chart = echarts.init(el, PAPER_STUDIO_THEME_NAME);
+    const chart = echarts.init(el, buildChartTheme());
     chartRef.current = chart;
 
     const ro = new ResizeObserver(() => chart.resize());

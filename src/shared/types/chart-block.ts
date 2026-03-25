@@ -2,7 +2,7 @@ import type { Aggregation } from '@/shared/lib/duckdb';
 
 export type ChartType = 'bar' | 'line' | 'pie';
 
-export interface Block {
+export interface ChartBlock {
   id: string;
   // layout
   x: number;

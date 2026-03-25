@@ -15,34 +15,22 @@ export function DuckDBProvider({ children }: Props) {
     if (didRun.current) return;
     didRun.current = true;
 
-    init().then(async () => {
-      const { datasets, addDataset } = useDatasetStore.getState();
-
-      if (datasets.length === 0) {
+    init()
+      .then(async () => {
         const tables = await getAllTables();
-        for (const tableName of tables) {
-          addDataset({
-            id: tableName,
-            name: tableName,
-            tableName,
-            columns: [],
-            rowCount: 0,
-            createdAt: Date.now(),
-          });
-        }
-      }
-
-      setReady(true);
-    }).catch((err) => {
-      setError(err instanceof Error ? err.message : 'Failed to initialize DuckDB');
-    });
+        useDatasetStore.getState().recoverDatasets(tables);
+        setReady(true);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to initialize DuckDB');
+      });
   }, []);
 
   if (error) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-2">
         <p className="text-sm font-medium text-destructive">Failed to start</p>
-        <p className="text-xs text-muted-foreground max-w-sm text-center">{error}</p>
+        <p className="max-w-sm text-center text-xs text-muted-foreground">{error}</p>
       </div>
     );
   }
@@ -50,7 +38,7 @@ export function DuckDBProvider({ children }: Props) {
   if (!ready) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground animate-pulse">Initializing engine…</p>
+        <p className="animate-pulse text-sm text-muted-foreground">Initializing engine…</p>
       </div>
     );
   }

@@ -159,8 +159,8 @@ export async function resetPersistentDB(dbFileName = 'webmcpbi.db'): Promise<voi
     try {
       await root.removeEntry(file);
       console.log(`Deleted file: ${file}`);
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'NotFoundError') {
         console.log(`File ${file} not found (already deleted)`);
       } else {
         console.error(`Error deleting ${file}:`, err);

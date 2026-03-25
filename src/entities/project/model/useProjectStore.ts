@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Block } from '@/shared/model';
-import type { Project, Dashboard } from './types';
+import type { ChartBlock } from '@/shared/types';
+import type { Project, Dashboard } from '../types/types';
 
 interface ProjectStore {
   projects: Project[];
@@ -16,9 +16,9 @@ interface ProjectStore {
   removeDashboard: (projectId: string, dashboardId: string) => void;
   renameDashboard: (projectId: string, dashboardId: string, name: string) => void;
 
-  addBlock: () => void;
-  removeBlock: (blockId: string) => void;
-  updateBlock: (blockId: string, patch: Partial<Block>) => void;
+  addChartBlock: () => void;
+  removeChartBlock: (blockId: string) => void;
+  updateChartBlock: (blockId: string, patch: Partial<ChartBlock>) => void;
   updateLayout: (items: ReadonlyArray<{ i: string; x: number; y: number; w: number; h: number }>) => void;
 
   setActive: (projectId: string, dashboardId: string) => void;
@@ -97,14 +97,14 @@ export const useProjectStore = create<ProjectStore>()(
           ),
         })),
 
-      addBlock: () => {
+      addChartBlock: () => {
         const { activeProjectId, activeDashboardId, projects } = get();
         if (!activeProjectId || !activeDashboardId) return;
         const activeDash = projects
           .find((p) => p.id === activeProjectId)
           ?.dashboards.find((d) => d.id === activeDashboardId);
         const bottomY = activeDash ? activeDash.blocks.reduce((acc, b) => Math.max(acc, b.y + b.h), 0) : 0;
-        const newBlock: Block = {
+        const newChartBlock: ChartBlock = {
           id: crypto.randomUUID(),
           x: 0,
           y: bottomY,
@@ -119,12 +119,12 @@ export const useProjectStore = create<ProjectStore>()(
         set((s) => ({
           projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
             ...d,
-            blocks: [...d.blocks, newBlock],
+            blocks: [...d.blocks, newChartBlock],
           })),
         }));
       },
 
-      removeBlock: (blockId) => {
+      removeChartBlock: (blockId) => {
         const { activeProjectId, activeDashboardId } = get();
         set((s) => ({
           projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
@@ -134,7 +134,7 @@ export const useProjectStore = create<ProjectStore>()(
         }));
       },
 
-      updateBlock: (blockId, patch) => {
+      updateChartBlock: (blockId, patch) => {
         const { activeProjectId, activeDashboardId } = get();
         set((s) => ({
           projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
