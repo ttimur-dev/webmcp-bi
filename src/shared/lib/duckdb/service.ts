@@ -51,6 +51,10 @@ function getDb(): duckdb.AsyncDuckDB {
   return db;
 }
 
+function esc(identifier: string): string {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
 function mapDuckDBTypeToFrontend(duckdbType: string): ColumnType {
   const t = duckdbType.toUpperCase().trim();
 
@@ -88,7 +92,7 @@ export async function importCSV(tableName: string, file: File): Promise<TableSch
   await instance.registerFileHandle(tableName, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
 
   await c.query(
-    `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_csv_auto('${tableName}', header=true, ignore_errors=true)`,
+    `CREATE OR REPLACE TABLE ${esc(tableName)} AS SELECT * FROM read_csv_auto('${tableName}', header=true, ignore_errors=true)`,
   );
 
   await c.query('CHECKPOINT;');
@@ -108,7 +112,7 @@ export async function getSchema(tableName: string): Promise<TableSchema> {
     type: mapDuckDBTypeToFrontend(String(row['type'])),
   }));
 
-  const countResult = await c.query(`SELECT COUNT(*)::INTEGER as cnt FROM "${tableName}"`);
+  const countResult = await c.query(`SELECT COUNT(*)::INTEGER as cnt FROM ${esc(tableName)}`);
   const rowCount = Number(countResult.toArray()[0]?.toJSON()['cnt'] ?? 0);
 
   return { columns, rowCount };
@@ -119,11 +123,11 @@ export async function query(req: QueryRequest): Promise<QueryResult> {
   const { tableName, dimension, dimensionType, measure, aggregation } = req;
 
   const dimExpr =
-    dimensionType === 'date' ? `STRFTIME(DATE_TRUNC('day', "${dimension}"), '%Y-%m-%d')` : `"${dimension}"`;
+    dimensionType === 'date' ? `STRFTIME(DATE_TRUNC('day', ${esc(dimension)}), '%Y-%m-%d')` : esc(dimension);
 
   const sql = `
-    SELECT ${dimExpr} as label, ${aggregation}("${measure}") as value
-    FROM "${tableName}"
+    SELECT ${dimExpr} as label, ${aggregation}(${esc(measure)}) as value
+    FROM ${esc(tableName)}
     GROUP BY ${dimExpr}
     ORDER BY label ASC
   `;
@@ -139,7 +143,7 @@ export async function query(req: QueryRequest): Promise<QueryResult> {
 
 export async function dropTable(tableName: string): Promise<void> {
   const c = getConn();
-  await c.query(`DROP TABLE IF EXISTS "${tableName}"`);
+  await c.query(`DROP TABLE IF EXISTS ${esc(tableName)}`);
   await c.query('CHECKPOINT;');
 }
 
@@ -155,8 +159,8 @@ export async function resetPersistentDB(dbFileName = 'webmcpbi.db'): Promise<voi
     try {
       await root.removeEntry(file);
       console.log(`Deleted file: ${file}`);
-    } catch (err: any) {
-      if (err.name === 'NotFoundError') {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'NotFoundError') {
         console.log(`File ${file} not found (already deleted)`);
       } else {
         console.error(`Error deleting ${file}:`, err);

@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { GridLayout, getCompactor, useContainerWidth } from 'react-grid-layout';
+import { useProjectStore } from '@/entities/project';
+import { ChartCard } from './ChartCard';
+
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { useProjectStore } from '@/entities/project';
-import { BlockCard } from './BlockCard';
 
-// null = no compaction, false = no overlap, true = snap back on collision
 const gridCompactor = getCompactor(null, false, true);
 
 interface Props {
@@ -21,7 +21,7 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
     return p?.dashboards.find((d) => d.id === s.activeDashboardId) ?? null;
   });
 
-  const addBlock = useProjectStore((s) => s.addBlock);
+  const addChartBlock = useProjectStore((s) => s.addChartBlock);
   const updateLayout = useProjectStore((s) => s.updateLayout);
 
   const blocks = activeDashboard?.blocks ?? [];
@@ -35,7 +35,7 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
     () =>
       blocks.map((block) => (
         <div key={block.id}>
-          <BlockCard block={block} />
+          <ChartCard block={block} />
         </div>
       )),
     [blocks],
@@ -43,25 +43,21 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
 
   if (!activeDashboard) {
     return (
-      <div ref={containerRef} className="dash-canvas flex-1 flex flex-col items-center justify-center gap-4">
-        <svg className="w-12 h-12 opacity-20" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div ref={containerRef} className="dash-canvas flex flex-1 flex-col items-center justify-center gap-4">
+        <svg className="size-12 opacity-20" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="6" y="6" width="15" height="15" rx="2" />
           <rect x="27" y="6" width="15" height="15" rx="2" />
           <rect x="6" y="27" width="15" height="15" rx="2" />
           <rect x="27" y="27" width="15" height="15" rx="2" />
         </svg>
-        <div className="text-center space-y-1">
+        <div className="space-y-1 text-center">
           <p className="text-sm font-medium text-foreground/50">No dashboard open</p>
-          <p className="text-xs font-mono text-muted-foreground opacity-60">Open or create a project to get started</p>
+          <p className="font-mono text-xs text-muted-foreground opacity-60">Open or create a project to get started</p>
         </div>
         <button
           onClick={onOpenProjects}
-          className="mt-1 px-4 py-1.5 rounded-md text-xs font-medium transition-colors border"
-          style={{
-            background: 'oklch(0.53 0.165 52 / 0.08)',
-            color: 'oklch(0.53 0.165 52)',
-            borderColor: 'oklch(0.53 0.165 52 / 0.25)',
-          }}
+          aria-label="Open Projects"
+          className="mt-1 rounded-md border border-primary-border bg-primary-bg px-4 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary-bg-subtle"
         >
           Open Projects
         </button>
@@ -70,22 +66,16 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
   }
 
   return (
-    <div className="dash-canvas flex-1 relative overflow-hidden">
+    <div className="dash-canvas relative flex-1 overflow-hidden">
       <div ref={containerRef} className="absolute inset-0 overflow-auto">
         {blocks.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3">
-            <svg
-              className="w-10 h-10 opacity-20"
-              viewBox="0 0 40 40"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
+            <svg className="size-10 opacity-20" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="4" y="20" width="8" height="16" rx="1" />
               <rect x="16" y="12" width="8" height="24" rx="1" />
               <rect x="28" y="6" width="8" height="30" rx="1" />
             </svg>
-            <p className="text-sm font-mono text-muted-foreground opacity-60">Add a chart to get started</p>
+            <p className="font-mono text-sm text-muted-foreground opacity-60">Add a chart to get started</p>
           </div>
         ) : (
           mounted && (
@@ -104,12 +94,12 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
       </div>
 
       <button
-        onClick={addBlock}
+        onClick={addChartBlock}
         title="Add chart"
-        className="absolute bottom-5 right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-        style={{ background: 'oklch(0.53 0.165 52)', color: 'white' }}
+        aria-label="Add new chart block"
+        className="absolute right-5 bottom-5 z-10 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="size-5" />
       </button>
     </div>
   );

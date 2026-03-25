@@ -28,3 +28,5 @@ memory
 .claude
 .agents
 skills-lock.json
+docs
+GEMINI.md
