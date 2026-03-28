@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
-import { GridLayout, getCompactor, useContainerWidth } from 'react-grid-layout';
+import ReactGridLayout, { useContainerWidth, useResponsiveLayout } from 'react-grid-layout';
 import { useProjectStore } from '@/entities/project';
 import { ChartCard } from './ChartCard';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-
-const gridCompactor = getCompactor(null, false, true);
 
 interface Props {
   onOpenProjects: () => void;
@@ -16,20 +14,27 @@ interface Props {
 export function DashboardCanvas({ onOpenProjects }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
 
+  const addChartBlock = useProjectStore((s) => s.addChartBlock);
+  const updateLayout = useProjectStore((s) => s.updateLayout);
+
   const activeDashboard = useProjectStore((s) => {
     const p = s.projects.find((p) => p.id === s.activeProjectId);
     return p?.dashboards.find((d) => d.id === s.activeDashboardId) ?? null;
   });
 
-  const addChartBlock = useProjectStore((s) => s.addChartBlock);
-  const updateLayout = useProjectStore((s) => s.updateLayout);
-
   const blocks = activeDashboard?.blocks ?? [];
 
-  const layout = useMemo(
+  const lgLayout = useMemo(
     () => blocks.map((b) => ({ i: b.id, x: b.x, y: b.y, w: b.w, h: b.h, static: b.static ?? false })),
     [blocks],
   );
+
+  const { layout, cols } = useResponsiveLayout({
+    width,
+    breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
+    cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+    layouts: { lg: lgLayout },
+  });
 
   const gridChildren = useMemo(
     () =>
@@ -79,16 +84,15 @@ export function DashboardCanvas({ onOpenProjects }: Props) {
           </div>
         ) : (
           mounted && (
-            <GridLayout
+            <ReactGridLayout
               width={width}
               layout={layout}
-              gridConfig={{ cols: 12, rowHeight: 60, containerPadding: [16, 16] }}
-              compactor={gridCompactor}
-              dragConfig={{ handle: '.drag-handle' }}
+              gridConfig={{ cols, rowHeight: 40, containerPadding: [16, 16] }}
+              dragConfig={{ enabled: true, handle: '.drag-handle' }}
               onLayoutChange={updateLayout}
             >
               {gridChildren}
-            </GridLayout>
+            </ReactGridLayout>
           )
         )}
       </div>
