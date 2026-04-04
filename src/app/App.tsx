@@ -1,11 +1,11 @@
 import { Toaster } from '@/shared/ui/sonner';
-import { DashboardView } from '@/views/dashboard';
+import { Main } from '@/pages/main';
 import { DuckDBProvider } from './providers/DuckDBProvider';
 
 export function App() {
   return (
     <DuckDBProvider>
-      <DashboardView />
+      <Main />
       <Toaster />
     </DuckDBProvider>
   );

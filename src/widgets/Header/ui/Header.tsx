@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/shared/ui/button';
 import { useDatasetStore } from '@/entities/dataset';
 import { useProjectStore } from '@/entities/project';
+import { useDashboardStore } from '@/entities/dashboard';
 
 interface Props {
   onOpenProjects: () => void;
@@ -12,14 +13,19 @@ interface Props {
 export function Header({ onOpenProjects, onOpenData }: Props) {
   const datasets = useDatasetStore((s) => s.datasets);
 
-  const { activeProjectName, activeDashboardName, activeBlockCount } = useProjectStore(
+  const { activeProjectName, activeDashboardId } = useProjectStore(
+    useShallow((s) => ({
+      activeProjectName: s.activeProject.projectId ? s.projects[s.activeProject.projectId]?.name : undefined,
+      activeDashboardId: s.activeProject.dashboardId,
+    })),
+  );
+
+  const { activeDashboardName, activePanelCount } = useDashboardStore(
     useShallow((s) => {
-      const p = s.projects.find((p) => p.id === s.activeProjectId);
-      const d = p?.dashboards.find((d) => d.id === s.activeDashboardId);
+      const d = activeDashboardId ? s.dashboards[activeDashboardId] : undefined;
       return {
-        activeProjectName: p?.name,
         activeDashboardName: d?.name,
-        activeBlockCount: d?.blocks.length ?? 0,
+        activePanelCount: d?.panelIds.length ?? 0,
       };
     }),
   );
@@ -61,7 +67,6 @@ export function Header({ onOpenProjects, onOpenData }: Props) {
         )}
       </Button>
 
-      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Active dashboard */}
@@ -76,7 +81,7 @@ export function Header({ onOpenProjects, onOpenData }: Props) {
             <span className="mx-0.5 opacity-40">/</span>
             <span className="text-primary">{activeDashboardName}</span>
             <span className="ml-1.5 opacity-40">
-              · {activeBlockCount} block{activeBlockCount !== 1 ? 's' : ''}
+              · {activePanelCount} panel{activePanelCount !== 1 ? 's' : ''}
             </span>
           </button>
         ) : (

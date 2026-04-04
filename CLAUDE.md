@@ -66,6 +66,5 @@ After reading, confirm which skills you loaded.
 ## Key constraints
 
 - Requires cross-origin isolation for SharedArrayBuffer (DuckDB multithreading). `vite.config.ts` sets `COOP: same-origin` + `COEP: require-corp` headers and excludes `@duckdb/duckdb-wasm` from `optimizeDeps`.
-- `apache-arrow` is a direct dependency — DuckDB query results are Arrow Tables. Currently using `.toArray().map(r => r.toJSON())` for result extraction.
 - CSV import uses `ignore_errors=true` to handle non-UTF-8 encoded files (e.g. Windows-1252).
 - Prettier config: `printWidth: 120`, single quotes, trailing commas.

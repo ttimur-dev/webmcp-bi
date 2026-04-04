@@ -1,171 +1,79 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ChartBlock } from '@/shared/types';
-import type { Project, Dashboard } from '../types/types';
+import { immer } from 'zustand/middleware/immer';
+import type { Project } from '@/shared/types';
 
 interface ProjectStore {
-  projects: Project[];
-  activeProjectId: string | null;
-  activeDashboardId: string | null;
+  projects: Record<string, Project>;
+  activeProject: { projectId: string | null; dashboardId: string | null };
 
   addProject: (name: string) => string;
   removeProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
 
-  addDashboard: (projectId: string, name: string) => string;
-  removeDashboard: (projectId: string, dashboardId: string) => void;
-  renameDashboard: (projectId: string, dashboardId: string, name: string) => void;
+  addDashboardToProject: (projectId: string, dashboardId: string) => void;
+  removeDashboardFromProject: (projectId: string, dashboardId: string) => void;
 
-  addChartBlock: () => void;
-  removeChartBlock: (blockId: string) => void;
-  updateChartBlock: (blockId: string, patch: Partial<ChartBlock>) => void;
-  updateLayout: (items: ReadonlyArray<{ i: string; x: number; y: number; w: number; h: number }>) => void;
-
-  setActive: (projectId: string, dashboardId: string) => void;
-  clearActive: () => void;
-}
-
-function patchActiveDashboard(
-  projects: Project[],
-  activeProjectId: string | null,
-  activeDashboardId: string | null,
-  patch: (d: Dashboard) => Dashboard,
-): Project[] {
-  if (!activeProjectId || !activeDashboardId) return projects;
-  return projects.map((p) =>
-    p.id === activeProjectId
-      ? { ...p, dashboards: p.dashboards.map((d) => (d.id === activeDashboardId ? patch(d) : d)) }
-      : p,
-  );
+  setActiveProject: (projectId: string, dashboardId: string) => void;
 }
 
 export const useProjectStore = create<ProjectStore>()(
   persist(
-    (set, get) => ({
-      projects: [],
-      activeProjectId: null,
-      activeDashboardId: null,
+    immer((set) => ({
+      projects: {},
+      activeProject: { projectId: null, dashboardId: null },
 
       addProject: (name) => {
         const id = crypto.randomUUID();
-        set((s) => ({
-          projects: [...s.projects, { id, name, dashboards: [], createdAt: Date.now() }],
-        }));
+        set((state) => {
+          state.projects[id] = { id, name, dashboardIds: [], createdAt: Date.now() };
+        });
         return id;
       },
 
       removeProject: (id) =>
-        set((s) => ({
-          projects: s.projects.filter((p) => p.id !== id),
-          activeProjectId: s.activeProjectId === id ? null : s.activeProjectId,
-          activeDashboardId: s.activeProjectId === id ? null : s.activeDashboardId,
-        })),
+        set((state) => {
+          delete state.projects[id];
+          if (state.activeProject.projectId === id) {
+            state.activeProject.projectId = null;
+            state.activeProject.dashboardId = null;
+          }
+        }),
 
       renameProject: (id, name) =>
-        set((s) => ({
-          projects: s.projects.map((p) => (p.id === id ? { ...p, name } : p)),
-        })),
+        set((state) => {
+          if (state.projects[id]) {
+            state.projects[id].name = name;
+          }
+        }),
 
-      addDashboard: (projectId, name) => {
-        const id = crypto.randomUUID();
-        const dashboard: Dashboard = { id, name, blocks: [], createdAt: Date.now() };
-        set((s) => ({
-          projects: s.projects.map((p) =>
-            p.id === projectId ? { ...p, dashboards: [...p.dashboards, dashboard] } : p,
-          ),
-        }));
-        return id;
-      },
+      addDashboardToProject: (projectId, dashboardId) =>
+        set((state) => {
+          if (state.projects[projectId]) {
+            state.projects[projectId].dashboardIds.push(dashboardId);
+          }
+        }),
 
-      removeDashboard: (projectId, dashboardId) =>
-        set((s) => ({
-          projects: s.projects.map((p) =>
-            p.id === projectId ? { ...p, dashboards: p.dashboards.filter((d) => d.id !== dashboardId) } : p,
-          ),
-          activeDashboardId: s.activeDashboardId === dashboardId ? null : s.activeDashboardId,
-        })),
+      removeDashboardFromProject: (projectId, dashboardId) =>
+        set((state) => {
+          if (state.projects[projectId]) {
+            state.projects[projectId].dashboardIds = state.projects[projectId].dashboardIds.filter(
+              (id) => id !== dashboardId,
+            );
+            if (state.activeProject.dashboardId === dashboardId) {
+              state.activeProject.dashboardId = null;
+            }
+          }
+        }),
 
-      renameDashboard: (projectId, dashboardId, name) =>
-        set((s) => ({
-          projects: s.projects.map((p) =>
-            p.id === projectId
-              ? {
-                  ...p,
-                  dashboards: p.dashboards.map((d) => (d.id === dashboardId ? { ...d, name } : d)),
-                }
-              : p,
-          ),
-        })),
-
-      addChartBlock: () => {
-        const { activeProjectId, activeDashboardId, projects } = get();
-        if (!activeProjectId || !activeDashboardId) return;
-        const activeDash = projects
-          .find((p) => p.id === activeProjectId)
-          ?.dashboards.find((d) => d.id === activeDashboardId);
-        const bottomY = activeDash ? activeDash.blocks.reduce((acc, b) => Math.max(acc, b.y + b.h), 0) : 0;
-        const newChartBlock: ChartBlock = {
-          id: crypto.randomUUID(),
-          x: 0,
-          y: bottomY,
-          w: 6,
-          h: 4,
-          datasetId: null,
-          chartType: 'bar',
-          dimension: null,
-          measure: null,
-          aggregation: 'SUM',
-        };
-        set((s) => ({
-          projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
-            ...d,
-            blocks: [...d.blocks, newChartBlock],
-          })),
-        }));
-      },
-
-      removeChartBlock: (blockId) => {
-        const { activeProjectId, activeDashboardId } = get();
-        set((s) => ({
-          projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
-            ...d,
-            blocks: d.blocks.filter((b) => b.id !== blockId),
-          })),
-        }));
-      },
-
-      updateChartBlock: (blockId, patch) => {
-        const { activeProjectId, activeDashboardId } = get();
-        set((s) => ({
-          projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
-            ...d,
-            blocks: d.blocks.map((b) => (b.id === blockId ? { ...b, ...patch } : b)),
-          })),
-        }));
-      },
-
-      updateLayout: (items) => {
-        const { activeProjectId, activeDashboardId } = get();
-        const byId = new Map(items.map((i) => [i.i, i]));
-        set((s) => ({
-          projects: patchActiveDashboard(s.projects, activeProjectId, activeDashboardId, (d) => ({
-            ...d,
-            blocks: d.blocks.map((b) => {
-              const item = byId.get(b.id);
-              if (!item) return b;
-              if (item.x === b.x && item.y === b.y && item.w === b.w && item.h === b.h) return b;
-              return { ...b, x: item.x, y: item.y, w: item.w, h: item.h };
-            }),
-          })),
-        }));
-      },
-
-      setActive: (projectId, dashboardId) => set({ activeProjectId: projectId, activeDashboardId: dashboardId }),
-
-      clearActive: () => set({ activeProjectId: null, activeDashboardId: null }),
-    }),
+      setActiveProject: (projectId, dashboardId) =>
+        set((state) => {
+          state.activeProject.projectId = projectId;
+          state.activeProject.dashboardId = dashboardId;
+        }),
+    })),
     {
-      name: 'project-store',
+      name: 'webbi-projects',
       storage: createJSONStorage(() => localStorage),
     },
   ),

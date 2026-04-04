@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { importCSV as duckdbImportCSV, dropTable } from '@/shared/lib/duckdb';
-import type { Dataset } from '../types/types';
+import type { Dataset } from '@/shared/types';
 
 interface DatasetStore {
   datasets: Dataset[];

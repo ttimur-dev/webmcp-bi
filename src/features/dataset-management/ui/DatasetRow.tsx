@@ -1,6 +1,6 @@
 import { Sheet, X } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
-import type { Dataset } from '@/entities/dataset';
+import type { Dataset } from '@/shared/types';
 
 interface Props {
   dataset: Dataset;

@@ -1,1 +1,1 @@
-export { DatasetManagerModal } from './ui/DatasetManagerModal';
+export { DatasetManagementModal } from './ui/DatasetManagementModal';
