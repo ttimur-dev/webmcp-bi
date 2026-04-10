@@ -19,7 +19,7 @@ bunx tsc --noEmit  # type check only
 ┌─────────────────┐
 │      app        │  ← Can import from all layers below
 ├─────────────────┤
-│     views       │  ← Can import: widgets, features, entities, shared
+│     pages       │  ← Can import: widgets, features, entities, shared
 ├─────────────────┤
 │    widgets      │  ← Can import: features, entities, shared
 ├─────────────────┤
@@ -30,24 +30,6 @@ bunx tsc --noEmit  # type check only
 │     shared      │  ← Cannot import from any FSD layer
 └─────────────────┘
 ```
-
-## Mandatory Skills
-
-Before ANY task, read and apply the relevant skills below. This is NOT optional.
-If you skip reading a skill file, your work is invalid and must be redone.
-After reading, confirm which skills you loaded.
-
-### Always load (every session):
-
-1. `cat .claude/skills/feature-sliced-design/SKILL.md` — FSD architecture rules
-
-### Load on code review / refactoring:
-
-2. `cat .claude/skills/code-refactoring/SKILL.md` — review methodology and report format
-
-### Load when working with UI components:
-
-3. `cat .claude/skills/shadcn/SKILL.md` — component library rules
 
 ### UI Component Rules (CRITICAL):
 

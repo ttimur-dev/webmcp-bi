@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# WebMCP BI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Browser-native Business Intelligence tool. Import CSV files, build interactive dashboards with charts — all running locally in your browser with no backend required.
 
-Currently, two official plugins are available:
+## Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **CSV Import** — drag-and-drop CSV files; data is stored in DuckDB-WASM with persistent OPFS storage
+- **SQL Analytics** — automatic aggregation queries (SUM, COUNT, AVG, MIN, MAX) with date bucketing
+- **Interactive Charts** — bar, line, and pie charts powered by ECharts with data zoom
+- **Draggable Dashboards** — responsive grid layout (react-grid-layout) with 5 breakpoints (lg/md/sm/xs/xxs)
+- **Projects & Dashboards** — organize work into projects, each containing multiple dashboards
+- **Fully Offline** — no server, no API calls; all data stays in the browser via OPFS
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Technology |
+|---|---|
+| Framework | React 19, TypeScript, Vite |
+| Data Engine | DuckDB-WASM + Apache Arrow |
+| State | Zustand + Immer (localStorage persist) |
+| Charts | ECharts 6 |
+| Layout | react-grid-layout |
+| UI | shadcn/ui, Radix UI, Tailwind CSS 4 |
+| Runtime | Bun |
 
-## Expanding the ESLint configuration
+## Architecture
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The project follows **Feature-Sliced Design (FSD)**:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```
+src/
+├── app/            # Root component, DuckDB provider
+├── pages/          # Full page views (Main)
+├── widgets/        # Composite UI (DashboardCanvas, Header)
+├── features/       # Business features (dataset-management, panel-configuration, project-management)
+├── entities/       # Domain stores (dashboard, dataset, panel, project)
+└── shared/         # DuckDB service, types, constants, shadcn/ui components
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+- [Bun](https://bun.sh/) (recommended) or Node.js 18+
+- Chrome/Edge (SharedArrayBuffer requires cross-origin isolation)
+
+### Install & Run
+
+```bash
+bun install
+bun dev
 ```
+
+Open http://localhost:5173 in Chrome.
+
+### Build
+
+```bash
+bun run build
+```
+
+## Usage
+
+1. Click **Projects** to create a project and a dashboard
+2. Click **Data** to import a CSV file
+3. Click the **+** button on the canvas to add a chart panel
+4. Configure the panel: choose a dataset, dimension, measure, aggregation, and chart type
+5. Drag and resize panels to arrange your dashboard
+
+## Technical Notes
+
+- **Cross-Origin Isolation** — Vite dev server sets `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers for SharedArrayBuffer (DuckDB multithreading)
+- **OPFS Persistence** — DuckDB database is stored in the Origin Private File System (`webmcpbi.db`), surviving page reloads
+- **CSV Handling** — uses `ignore_errors=true` in `read_csv_auto()` to handle non-UTF-8 encoded files
+
+## Scripts
+
+```bash
+bun dev                                     # Dev server
+bun run build                               # Type check + Vite build
+bunx prettier --write "src/**/*.{ts,tsx}"    # Format code
+bunx tsc --noEmit                           # Type check only
+```
+
+## Roadmap
+
+⭐ AI agents support (WebMCP) for power users and automation
+
+⭐ Built-in AI chat (WebLLM) for regular users
