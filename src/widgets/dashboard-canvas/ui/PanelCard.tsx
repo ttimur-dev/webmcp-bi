@@ -1,5 +1,4 @@
 import { X, GripHorizontal, Loader2 } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { EChart } from './EChart';
 import { useDashboardStore } from '@/entities/dashboard';
